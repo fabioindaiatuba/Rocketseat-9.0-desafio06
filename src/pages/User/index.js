@@ -26,6 +26,7 @@ export default class User extends Component {
   static propTypes = {
     navigation: PropTypes.shape({
       getParam: PropTypes.func,
+      navigate: PropTypes.func,
     }).isRequired,
   };
 
@@ -33,16 +34,17 @@ export default class User extends Component {
     stars: [],
     loading: false,
     page: 1,
+    refreshing: false,
+    flatListReady: false,
   };
 
   async componentDidMount() {
     const { navigation } = this.props;
-    const { page } = this.state;
     const user = navigation.getParam('user');
 
     this.setState({ loading: true });
 
-    const response = await api.get(`/users/${user.login}/starred?page=${page}`);
+    const response = await api.get(`/users/${user.login}/starred?page=1`);
 
     this.setState({
       stars: response.data,
@@ -50,27 +52,56 @@ export default class User extends Component {
     });
   }
 
+  scrolledLit = () => {
+    this.setState({ flatListReady: true });
+  };
+
   loadMore = async () => {
     const { navigation } = this.props;
-    const { page, stars } = this.state;
-    const user = navigation.getParam('user');
+    const { page, stars, flatListReady } = this.state;
+    if (flatListReady) {
+      const user = navigation.getParam('user');
 
-    this.setState({ loading: true });
+      this.setState({ loading: true });
+
+      const response = await api.get(
+        `/users/${user.login}/starred?page=${page + 1}`
+      );
+
+      this.setState({
+        stars: [...stars, ...response.data],
+        loading: false,
+        page: page + 1,
+      });
+    }
+  };
+
+  refreshList = async () => {
+    const { navigation } = this.props;
+    const user = navigation.getParam('user');
+    this.setState({ refreshing: true });
 
     const response = await api.get(
-      `/users/${user.login}/starred?page=${page + 1}`
+      `/users/${user.login}/starred?page=1&per_page=10`
     );
 
     this.setState({
-      stars: [...stars, ...response.data],
+      stars: [...response.data],
       loading: false,
-      page: page + 1,
+      page: 1,
+      refreshing: false,
     });
+  };
+
+  handleNavigate = repository => {
+    const { navigation } = this.props;
+
+    navigation.navigate('Repository', { repository });
   };
 
   render() {
     const { navigation } = this.props;
-    const { stars, loading } = this.state;
+    const { stars, loading, refreshing } = this.state;
     const user = navigation.getParam('user');
 
     return (
@@ -84,12 +115,15 @@ export default class User extends Component {
         <Stars
           onEndReachedThreshold={0.2} // Carrega mais itens quando chegar em 20% do fim
           onEndReached={this.loadMore}
+          onScroll={this.scrolledLit}
+          onRefresh={this.refreshList} // Função dispara quando o usuário arrasta a lista pra baixo
+          refreshing={refreshing}
           data={stars}
           keyExtractor={star => {
             return String(star.id);
           }}
           renderItem={({ item }) => (
-            <Starred>
+            <Starred onPress={() => this.handleNavigate(item)}>
               <OwnerAvatar source={{ uri: item.owner.avatar_url }} />
               <Info>
                 <Title>{item.name}</Title>

@@ -7,4 +7,8 @@
 ### Funções Modulo 06:
 * Criado loading nos usuarios na tela inicial.
 * Criado loading na tela de Stars.
-* Carregando mais stars conforme scroll na lista.
+* Carregando mais repositorios favoritos conforme scroll na lista.
+* Carregando apenas pagina 1 dos repositorios favoritos quando rolagens no inicio
+* Criado Pagina com webView para visualizar repositorio
+
+#### Desafio finalizado.
