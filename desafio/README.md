@@ -84,7 +84,7 @@ Exemplo de código:
 
 Resultado:
 
-![WebView](.github/exemplo-web-view.png)
+![WebView](https://github.com/Rocketseat/bootcamp-gostack-desafio-06/raw/master/.github/exemplo-web-view.png)
 
 ## 📅 Entrega
 
